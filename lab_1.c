@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-//проверка ввода на правильность
-int test_input(char* full, char max, int length, int not1, int not2) {						
+//РџСЂРѕРІРµСЂРєР° РІРІРѕРґР° РЅР° РїСЂР°РІРёР»СЊРЅРѕСЃС‚СЊ
+int test_input(char* full, char max, int length, int not1, int not2) {
 	int i = 0;
 	for (i = 0; i < length; i++) {
 		if (*(full + i) > max)
@@ -16,20 +16,20 @@ int test_input(char* full, char max, int length, int not1, int not2) {
 	if (not2 > 16 || not2 < 2)
 		return 100;
 
-	if ((*full == '.') || (*(full + length-1) == '.'))
+	if ((*full == '.') || (*(full + length - 1) == '.'))
 		return 100;
 
 	if (strchr(full, '.') != strrchr(full, '.'))
 		return 100;
 	return 0;
-}		
+}
 
-//возведение в степень
+//Р’РѕР·РІРµРґРµРЅРёРµ РІ СЃС‚РµРїРµРЅСЊ
 double power(int not, int pow) {
-	double result=1;
+	double result = 1;
 	int i;
 	if (pow >= 0) {
-	for (i = 1; i < pow; i++)
+		for (i = 1; i < pow; i++)
 			result *= not;
 	}
 	else {
@@ -40,17 +40,17 @@ double power(int not, int pow) {
 	return result;
 }
 
-//перевод числа в десятичную СС
+//РџРµСЂРµРІРѕРґ С‡РёСЃР»Р° РёР· not1 РІ 10-РЎРЎ
 double not1_cel_to_dec(char* full, int length, int not) {
-	double summ=0;
-	double chislo=0;
+	double summ = 0;
+	double chislo = 0;
 	int i;
 	char local_full[14];
-	char* nopt;											//место точки
-	char* nosymb;										//место символа
+	char* nopt;											
+	char* nosymb;										
 	memset(local_full, 0, sizeof(local_full));
-	for (i = 0; i < length; i++){						
-		local_full[i] = *(full + i);	
+	for (i = 0; i < length; i++){
+		local_full[i] = *(full + i);
 	}
 	nopt = strchr(local_full, '.');
 	if (nopt == 0)
@@ -59,28 +59,28 @@ double not1_cel_to_dec(char* full, int length, int not) {
 		if (local_full[i] == '.'){}
 		else {
 			if (local_full[i] < 'a')
-				chislo = local_full[i]-'0';
+				chislo = local_full[i] - '0';
 			else
 				chislo = local_full[i] - 'a' + 10;
 			nosymb = &local_full[i];
-			summ += chislo * power(not, (nopt-nosymb));
-		}	
+			summ += chislo * power(not, (nopt - nosymb));
+		}
 	}
 	return summ;
 }
 
-//перевод целой части десятичного числа в not2 и ее вывод
+//РџРµСЂРµРІРѕРґ С†РµР»РѕР№ С‡Р°СЃС‚Рё РІ not2
 void dec_cel_to_not2(double chislo, int not2, FILE* oFile) {
 	char local_full[52];
 	memset(local_full, 0, sizeof(local_full));
 	char* p;
-	
-	p = _i64toa(chislo, local_full, not2);	
+
+	p = _i64toa(chislo, local_full, not2);
 	fprintf(oFile, "%s", p);
-	
+
 }
 
-//перевод дробной части десятичного числа в not2 и ее вывод
+//РџРµСЂРµРІРѕРґ РґСЂРѕР±РЅРѕР№ С‡Р°СЃС‚Рё РІ not2
 void dec_drob_to_not2(double chislo_full, int not2, FILE* oFile) {
 	char drob[14];
 	double chislo;
@@ -91,7 +91,7 @@ void dec_drob_to_not2(double chislo_full, int not2, FILE* oFile) {
 	memset(drob, 0, sizeof(drob));
 	for (i = 0; i < 12; i++)
 	{
-			if (chislo != 0) {
+		if (chislo != 0) {
 			chislo *= not2;
 			cel_chast = chislo;
 			if (cel_chast < 10)
@@ -109,18 +109,18 @@ void dec_drob_to_not2(double chislo_full, int not2, FILE* oFile) {
 int main() {
 	int i = 0;
 	int not1, not2;
-	int err=0;
+	int err = 0;
 	char max;
-	char chislo_full[14];	
+	char chislo_full[14];
 	FILE *iFile;
 	FILE *oFile;
 	iFile = fopen("in.txt", "r");
 	oFile = fopen("out.txt", "w");
 	fscanf(iFile, "%d %d\n", &not1, &not2);
 	if (not1 <= 10)
-		max = not1 + '0'- 1;
+		max = not1 + '0' - 1;
 	else {
-		max = not1 - 10 + 'a'-1;	
+		max = not1 - 10 + 'a' - 1;
 	}
 	fscanf(iFile, "%13s", chislo_full);
 	fclose(iFile);
