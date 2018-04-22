@@ -91,26 +91,52 @@ void printErr(int error, FILE* oFile)
 		fprintf(oFile, "bad length");
 }
 
-void MinDistanceUpdate(unsigned int ** edges,  int* MinDistance, int new, long int DisToNew, int numV)
+void ClearAll(unsigned int ** edges, long int* MinDistance, int* Path, int* AlreadyIn, int numV)
 {
-
-	MinDistance[new] = 0;
-	for (int i = 1; i < numV + 1; i++)
-		if (edges[new][i])
-			if (MinDistance[i] < 0 || MinDistance[i] > DisToNew + edges[new][i])
-				MinDistance[i] = DisToNew + edges[new][i];
-
+	clearEdges(edges, numV);
+	free(Path);
+	free(MinDistance);
+	free(AlreadyIn);
 }
 
-int AddVertex(unsigned int ** edges, long int* MinDistance, int * AlreadyIn, int numV)
+void MinDistanceUpdate(unsigned int ** edges, long int* MinDistance,
+								int new, int* Path, int* AlreadyIn,  int numV, FILE* oFile)
+{
+	//вывод всего изменгени€ MinDistance в зависимости от вершины new
+	//fprintf(oFile, "New Vertex: %d\n", new);
+	MinDistance[new] = MinDistance[Path[new]] + edges[Path[new]][new];
+	for (int i = 1; i < numV + 1; i++)
+	{
+		//fprintf(oFile, "AlreadyIn[%d] = %d ", i, AlreadyIn[i]);
+		//fprintf(oFile, "edges[%d][%d] = %d ", new, i, edges[new][i]);
+		//fprintf(oFile, "MinDistance[%d] = %d\n", i, MinDistance[i]);
+		if (!AlreadyIn[i])
+		{
+			if (edges[new][i])
+			{
+				if (MinDistance[i] < 0 || MinDistance[i] > MinDistance[new] + edges[new][i])
+				{
+					MinDistance[i] = MinDistance[new] + edges[new][i];
+					Path[i] = new;
+					//fprintf(oFile, "Path[%d] = %d MinDistance[%d] = %d\n", i, new, i, MinDistance[i]);
+
+				}
+			}
+		}
+	}
+		
+	//fprintf(oFile, "!!!\n");
+}
+
+int AddVertex(unsigned int ** edges, long int* MinDistance, int * AlreadyIn, int* Path, int numV, FILE* oFile)
 {
 	long int tmp = LONG_MAX;
 	int NewVer = 0;
 	int t = 0;
 	for (int i = 1; i < numV + 1; i++)
 	{
-		if (AlreadyIn[i] == 0)			//ћожет не об€зательно
-			if (MinDistance[i] > 0 || MinDistance[i] < tmp)
+		if (!AlreadyIn[i])			//ћожет не об€зательно
+			if ((MinDistance[i] < tmp) && (MinDistance[i] >= 0))
 			{
 				tmp = MinDistance[i];
 				NewVer = i;
@@ -122,7 +148,9 @@ int AddVertex(unsigned int ** edges, long int* MinDistance, int * AlreadyIn, int
 		return 0;
 
 	AlreadyIn[NewVer] = 1;
-	MinDistanceUpdate(edges, MinDistance, NewVer, MinDistance[NewVer], numV);
+	//fprintf(oFile, "MinDistance[%d] = 1\n", tmp);
+	//fprintf(oFile, "AlreadyIn[%d] = 1\n", NewVer);
+	MinDistanceUpdate(edges, MinDistance, NewVer, Path, AlreadyIn, numV, oFile);
 	return 1;
 }
 
@@ -138,8 +166,8 @@ int dijkstra(int numV, int numE, int Start, int Finish, FILE* oFile, FILE* iFile
 		clearEdges(edges, numV);
 		return 0;
 	}
-	//int * Path = (int*)malloc(sizeof(int) * (numV + 1));
-	//memset(Path, 0, sizeof(int) * (numV + 1));
+	int * Path = (int*)malloc(sizeof(int) * (numV + 1));
+	memset(Path, 0, sizeof(int) * (numV + 1));
 
 	int * AlreadyIn = (int*)malloc(sizeof(int) * (numV + 1));
 	memset(AlreadyIn, 0, sizeof(int) * (numV + 1));
@@ -147,21 +175,68 @@ int dijkstra(int numV, int numE, int Start, int Finish, FILE* oFile, FILE* iFile
 	long int * MinDistance = (long int*)malloc(sizeof(long int) * (numV + 1));
 	memset(MinDistance, -1, sizeof(long int) * (numV + 1));
 
-	MinDistanceUpdate(edges, MinDistance, Start, 0, numV);
-
 	AlreadyIn[Start] = 1;
+	//MinDistance[Start] = 0;
+	MinDistance[0] = 0;
+	/*
+	for (int i = 0; i < numV + 1; i++)
+	{
+		if (edges[Start][i])
+			MinDistance[i] = edges[Start][i];
+	}
+	*/
+	Path[Start] = 0;
+	//edges[0][Start] = 0;
+	MinDistanceUpdate(edges, MinDistance, Start, Path, AlreadyIn, numV, oFile);
 
+	while (1) 
+	{
+		if (!AddVertex(edges, MinDistance, AlreadyIn, Path, numV, oFile))
+			break;
+	}
 
-	//TODO
+	/*
+	for (int i = 1; i < numV + 1; i++)
+		//fprintf(oFile, "%d ", MinDistance[i]);
 
-	/*for (int i = 1; i < numV + 1; i++) {
+	fprintf(oFile, "\n");
+
+	for (int i = 1; i < numV + 1; i++)
+		fprintf(oFile, "%d ", Path[i]);
+
+	fprintf(oFile, "\n");
+
+	for (int i = 1; i < numV + 1; i++)
+		fprintf(oFile, "%d ", AlreadyIn[i]);
+
+	for (int i = 1; i < numV + 1; i++) 
+	{
 		for (int j = 1; j < numV + 1; j++)
 			fprintf(oFile, "%d ", edges[i][j]);
 		fprintf(oFile, "\n");
 	}
-	*/
+			*/
 
-	clearEdges(edges, numV);
+	for (int i = 1; i < numV + 1; i++) 
+	{
+		if (MinDistance[i] >= 0)
+			fprintf(oFile, "%d ", MinDistance[i]);
+		else
+			fprintf(oFile, "oo ");
+	}
+	fprintf(oFile, "\n");
+	if (MinDistance[Finish] > 0) 
+	{
+		if (MinDistance[Finish] < INT_MAX)
+			fprintf(oFile, "%d", MinDistance[Finish]);
+		else
+			fprintf(oFile, "INT_MAX+");
+	}
+		
+	else
+		fprintf(oFile, "no path");
+	fprintf(oFile, "\n%d", INT_MAX);
+	ClearAll(edges, MinDistance, Path, AlreadyIn, numV);
 }
 
 
